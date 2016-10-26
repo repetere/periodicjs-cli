@@ -76,26 +76,54 @@ program
   });
 
 function installExtension(extension) {
-  console.log(`Installing ${extension}`);
+  if (extension.indexOf('@') !== -1) {
+    let [name, version] = extension.split('@');
+    console.log(`Installing ${name}@${version}`);
+  } else {
+    console.log(`Installing ${extension}@latest`);
+  }
+};
+
+function removeExtension(extension) {
+  console.log(`Removing ${extension}`);
 };
 
 program
   .command('install [ext...]')
   .alias('i')
-  .description('Installs extension to current Periodic Project')
+  .description('Installs extension for current Periodic Project')
   .action(function (extensions) {
-    if (!extensions) console.log('Please specify extension name: ex: "periodic-cli install oauth2server"')
+    if (!extensions) console.log('Please specify extension name')
     else {
       extensions.forEach(extension => installExtension(extension));
     }
   });
 
 program
-  (remove externsionsp
+  .command('remove [ext...]')
+  .alias('r')
+  .description('Removes extensions from current Periodic Project')
+  .action(function (extensions) {
+    if (!extensions) console.log('Please specify an extension you\'d like to remove');
+    else {
+      extensions.forEach(extension => removeExtension(extension));
+    }
+  });
 
-  upgrade(install periodicjs @ version)
+program
+  .command('upgrade [version]')
+  .alias('u')
+  .description('Installs PeriodicJS in current directory at specified version')
+  .action(function (version) {
 
-  setup alias upgrade latest
+  });
 
+program
+  .command('setup')
+  .alias('s')
+  .description('Installs PeriodicJS at latest version')
+  .action(function () {
+    
+  });
 
 program.parse(process.argv);
