@@ -15,10 +15,40 @@ const npm_deploysync = require('./scripts/npm_deploymentsync');
 const colors = require('colors');
 const spawn = require('child_process').spawn;
 let install_prefix = process.cwd();
+let child;
 
 program
   .version(require('./package').version)
   .option('-a, --all', 'all environments')
+
+var run_cmd = function (cmd, args, callback, env) {
+  var spawn = require('child_process').spawn;
+
+  if (env) {
+    child = spawn(cmd, args, env);		
+  }
+  else {
+    child = spawn(cmd, args);		
+  }
+
+  child.stdout.on('error', function (err) {
+    console.error(err);
+    process.exit(0);
+  });
+
+  child.stdout.on('data', function (buffer) {
+    console.log(buffer.toString());
+  });
+
+  child.stderr.on('data', function (buffer) {
+    console.error(buffer.toString());
+  });
+
+  child.on('exit', function () {
+    callback(null, 'command run: ' + cmd + ' ' + args);
+    process.exit(0);
+  }); 
+};
 
 // $ deploy deploy development
 // $ deploy deploy staging
@@ -29,8 +59,15 @@ program
     if (!env) {
       console.log('Please specify the environment')
     } else {
-      env = env;
-      console.log('deploy for %s env(s)', env);
+      try {
+        console.log('deploying for %s env(s)', env);
+        run_cmd( 'pm2', ['deploy', path.resolve(process.cwd(),'content/config/deployment/ecosystem.json')], function(err,text) { console.log (text); }, env);
+      }
+      catch (e) {
+        logger.error(e);
+        logger.error(e.stack);
+        process.exit(0);
+      }      
     }
   });
 
@@ -41,97 +78,78 @@ program
   .description('')
   .action(function () {
     console.log('Running deploysync'.america.underline);
-    npm_deploysync.deploy_sync_promise();
+    npm_deploysync.deploy_sync_promise()
+      .then(result => {
+        console.log(`Successfully ran deploysync`.green.underline);
+      })
+      .catch(err => { 
+        console.log(`Error running deploysync: ${err}`.red);
+      });
   });
-
-program
-  .command('post-install')
-  .alias('postinstall')
-  .description('Runs postinstall scripts for Periodic')
-  .action(function () {
-    console.log('Running post install script');
-  });
-
-program
-  .command('pre-install')
-  .alias('preinstall')
-  .description('Runs preinstall scripts for Periodic')
-  .action(function () {
-    console.log('Running pre install script');
-  });  
 
 program
   .command('start [env]')
   .description('starts the application in the specified environment')
   .action(function (env) {
     console.log(`Starting application in ${env}`.america.underline);
-    let options = {
-      'cwd': install_prefix
-    };
-    let app = spawn('nodemon', ['index.js', '--e', env], options);
-
-    app.stdout.on('data', (data) => {
-      console.log(data.toString());
-    });
-
-    app.stderr.on('data', (data) => {
-      console.log(data.toString());
-    });
-
-    app.on('error', (err) => {
-      console.log('Error starting child process: ', err.toString());
-    });
-
-    app.on('close', (code) => {
-      console.log('Application closed');
-    });
-  });
-
-program
-  .command('stop')
-  .description('stops the application')
-  .action(function () {
-    console.log('Stopping application');
+    run_cmd('nodemon', ['index.js', '--e', env], function (err, text) { console.log(text).rainbow.underline }, env);
   });
 
 program
   .command('test')
   .description('Recursively runs mocha tests')
   .action(function () {
-    console.log('Running tests');
-    let options = {
-      'cwd': install_prefix
-    };
-    let app = spawn('mocha', ['-R', 'spec', '--recursive'], options);
-
-    app.stdout.on('data', (data) => {
-      console.log(data.toString());
-    });
-
-    app.stderr.on('data', (data) => {
-      console.log(data.toString());
-    });
-
-    app.on('error', (err) => {
-      console.log('Error starting child process: ', err.toString());
-    });
-
-    app.on('close', (code) => {
-      console.log('Test finished');
-    });
+    console.log('Running tests'.green.underline);
+    run_cmd('mocha', ['-R', 'spec', '--recursive'], function (err, text) { console.log(text.rainbow.underline) } );
   });
 
 function installExtension(extension) {
+  let npm_load_options = {
+    'strict-ssl': false,
+    'save-optional': true,
+    'no-optional': true,
+    'production': true,
+    prefix: install_prefix
+  };
+
   if (extension.indexOf('@') !== -1) {
     let [name, version] = extension.split('@');
-    console.log(`Installing ${name}@${version}`);
+    console.log(`Installing ${name}@${version}`.rainbow.underline);
+    npm.load(npm_load_options, function (err) {
+      if (err) return console.log(`Error installing extension ${name}`.red);
+      npm.commands.install([`periodicjs.ext.${name}@${version}`], function (err, data) {
+        if (err) return console.log(`Error installing extension ${name}`.red)
+        console.log(`Successfully installed extension ${name}@${version}`.america);
+      })
+    })
   } else {
-    console.log(`Installing ${extension}@latest`);
+    console.log(`Installing ${extension}@latest`.rainbow.underline);
+    npm.load(npm_load_options, function (err) {
+      if (err) return console.log(`Error installing extension ${name}`.red);
+      npm.commands.install([`periodicjs.ext.${extension}`], function (err, data) {
+        if (err) return console.log(`Error installing extension ${extension}`.red)
+        console.log(`Successfully installed extension ${extension}@$latest`.america);
+      })
+    })    
   }
 };
 
 function removeExtension(extension) {
-  console.log(`Removing ${extension}`);
+  let npm_load_options = {
+    'strict-ssl': false,
+    'save-optional': true,
+    'no-optional': true,
+    'production': true,
+    prefix: install_prefix
+  };
+  console.log(`Removing extension ${extension}`.rainbow);
+  npm.load(npm_load_options, function (err) {
+    if (err) return console.log(`Error removing extension ${err}`.red);
+    npm.commands.remove([`periodicjs.ext.${extension}`], function (err, data) {
+      if (err) return console.log(`Error removing extension ${err}`.red)
+      console.log(`Successfully removed extension ${extension}`.america);
+    })
+  })
 };
 
 program
@@ -140,9 +158,7 @@ program
   .description('Installs extension for current Periodic Project')
   .action(function (extensions) {
     if (!extensions) console.log('Please specify extension name')
-    else {
-      extensions.forEach(extension => installExtension(extension));
-    }
+    extensions.forEach(extension => installExtension(extension));
   });
 
 program
@@ -150,10 +166,8 @@ program
   .alias('r')
   .description('Removes extensions from current Periodic Project')
   .action(function (extensions) {
-    if (!extensions) console.log('Please specify an extension you\'d like to remove');
-    else {
-      extensions.forEach(extension => removeExtension(extension));
-    }
+    if (!extensions) return console.log('Please specify an extension you\'d like to remove');
+    extensions.forEach(extension => removeExtension(extension));
   });
 
 program
