@@ -9,10 +9,10 @@
   "author": "Mark Waldron",
   "contributors": [{
     "name": "Yaw Joseph Etse",
-    "email": "yaw.etse@gmail.com",
+    "email": "yaw.etse@gmail.com"
   }, {
     "name": "Yaw Joseph Etse",
-    "email": "yaw.etse@gmail.com",
+    "email": "yaw.etse@gmail.com"
   }],
   "license": "MIT",
   "bin": {
