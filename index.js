@@ -93,7 +93,9 @@ program
   .command('start [env]')
   .description('starts the application in the specified environment')
   .action(function (env) {
-    console.log(`Starting application in ${env}`.green.underline);
+    let message = 'Starting application';
+    if (env) message = 'Starting application in ${env}'; 
+    console.log(message.green.underline);
     run_cmd('nodemon', ['index.js', '--e', env], function (err, text) { console.log(text.green.underline) }, env);
   });
 
