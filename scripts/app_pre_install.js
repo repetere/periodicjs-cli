@@ -23,45 +23,49 @@ var npm_init_polyfill_promise = new Promise((resolve,reject)=>{
 	});
 });
 
-npm_init_polyfill_promise.then(null,(/*error*/)=>{
-	//folder doesn't exist
-	return new Promise((resolve,reject)=>{
-		fs.mkdir(node_modules_dir_path,(err)=>{
-			if(err){
-				reject(err);
-			}
-			else{
-				resolve();
-			}
+const init = function () {
+	npm_init_polyfill_promise.then(null,(/*error*/)=>{
+		//folder doesn't exist
+		return new Promise((resolve,reject)=>{
+			fs.mkdir(node_modules_dir_path,(err)=>{
+				if(err){
+					reject(err);
+				}
+				else {
+					resolve();
+				}
+			});
 		});
+	})
+	.then(()=>{
+		//check package json
+		return new Promise((resolve,reject)=>{
+			fs.stat(package_json_file_path, (err, filedata) => {
+				if(err){
+					reject(err);
+				}
+				else {
+					resolve(filedata);
+				}
+			});
+		});
+	})
+	.then((/*package_json_data*/)=>{
+			console.log('Completed PRE-INSTALL');
+		},(/*error*/)=>{
+		//package.json doesn't exist
+		fs.write(package_json_file_path,'{}',(err)=>{
+				if(err){
+						console.log('Could not PRE-INSTALL Periodic while creating package.json',err.stack);
+					}
+				else{
+					console.log('Completed PRE-INSTALL');
+				}
+			});
+	})
+	.catch((e)=>{
+		console.log('Could not PRE-INSTALL Periodic',e.stack);
 	});
-})
-.then(()=>{
-	//check package json
-	return new Promise((resolve,reject)=>{
-		fs.stat(package_json_file_path,(err,filedata)=>{
-			if(err){
-				reject(err);
-			}
-			else{
-				resolve(filedata);
-			}
-		});
-	});
-})
-.then((/*package_json_data*/)=>{
-		console.log('Completed PRE-INSTALL');
-	},(/*error*/)=>{
-	//package.json doesn't exist
-	fs.write(package_json_file_path,'{}',(err)=>{
-			if(err){
-		  		console.log('Could not PRE-INSTALL Periodic while creating package.json',err.stack);
-   			}
-			else{
-				console.log('Completed PRE-INSTALL');
-			}
-		});
-})
-.catch((e)=>{
-	console.log('Could not PRE-INSTALL Periodic',e.stack);
-});
+}
+
+module.exports = { init };

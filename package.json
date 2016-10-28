@@ -6,14 +6,16 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Mark Waldron",
-  "contributors": [{
-    "name": "Yaw Joseph Etse",
-    "email": "yaw.etse@gmail.com"
-  }, {
-    "name": "Yaw Joseph Etse",
-    "email": "yaw.etse@gmail.com"
-  }],
+  "author": {
+    "email": "markewaldron@gmail.com",
+    "name": "Mark Waldron"
+  },
+  "contributors": [
+    {
+      "name": "Yaw Joseph Etse",
+      "email": "yaw.etse@gmail.com"
+    }
+  ],
   "license": "MIT",
   "bin": {
     "periodicjs": "./index.js"
@@ -25,8 +27,13 @@
     "commander": "^2.9.0",
     "fs-extra": "^0.30.0",
     "nodemon": "^1.11.0",
+    "periodicjs.core.extensions": "^6.5.0",
+    "periodicjs.core.utilities": "^6.1.1",
     "promisie": "^1.4.6",
     "semver": "^5.3.0",
     "utils-merge": "^1.0.0"
-  }
+  },
+  "private": true,
+  "readme": "My Custom PeriodicJS / Express Applcation",
+  "repository": "npm/npm"
 }
