@@ -63,7 +63,7 @@ program
     } else {
       try {
         console.log('deploying for %s env(s)', env);
-        run_cmd( 'pm2', ['deploy', path.resolve(process.cwd(),'content/config/deployment/ecosystem.json')], function(err,text) { console.log (text.green.underline); }, env);
+        run_cmd( 'pm2', ['deploy', path.resolve(process.cwd(),'content/config/deployment/ecosystem.json')], function (err, text) { console.log(text.green.underline) });
       }
       catch (e) {
         logger.error(e);
@@ -90,13 +90,36 @@ program
   });
 
 program
+  .command('forever')
+  .alias('f')
+  .description('')
+  .action((env = 'development') => {
+    run_cmd('forever', ['start', '-o', 'logs/app-out.forever.log', '-e', 'logs/app-err.forever.log', '-c', 'nodemon', 'index.js', '--e', env], function (err, text) { console.log(text.green.underline) });
+  });
+
+program
+  .command('coverage')
+  .alias('c')
+  .description('')
+  .action(() => {
+    run_cmd('mocha', ['-R', 'html-cov', '--recursive > test/coverage.html'], function (err, text) { console.log(text.green.underline) });
+  });
+
+program
   .command('start [env]')
   .description('starts the application in the specified environment')
-  .action(function (env) {
+  .action((env = 'development') => {
     let message = 'Starting application';
-    if (env) message = 'Starting application in ${env}'; 
+    if (env) message = `Starting application in ${env}`;
     console.log(message.green.underline);
-    run_cmd('nodemon', ['index.js', '--e', env], function (err, text) { console.log(text.green.underline) }, env);
+    run_cmd('nodemon', ['index.js', '--e', env], function (err, text) { console.log(text.green.underline) });
+  });
+
+program
+  .command('stop')
+  .description('Stops the forever instance of the application')
+  .action(() => {
+    run_cmd('forever', ['stop', '-c', 'nodemon', 'index.js'], function (err, text) { console.log(text.green.underline) });
   });
 
 program
@@ -104,7 +127,7 @@ program
   .description('Recursively runs mocha tests')
   .action(function () {
     console.log('Running tests'.green.underline);
-    run_cmd('mocha', ['-R', 'spec', '--recursive'], function (err, text) { console.log(text.green.underline) } );
+    run_cmd('mocha', ['-R', 'spec', '--recursive'], function (err, text) { console.log(text.green.underline) });
   });
 
 function installExtension(extension) {
