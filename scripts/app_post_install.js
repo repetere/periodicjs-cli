@@ -206,7 +206,6 @@ let project_files_copy = function() {
     console.log('application_root',application_root);
     return Promise.all([
       fs.copyAsync(project_index_path, application_root_path, { clobber: true }), //index.js
-      fs.copyAsync(path.join(periodic_module_resources, 'scripts'), path.join(application_root, 'scripts'), { clobber: true }),
       fs.copyAsync(path.join(periodic_module_resources, 'nodemon.json'), path.join(application_root, 'nodemon.json'), { clobber: true }),
       fs.copyAsync(path.join(periodic_module_resources, '.eslintrc.json'), path.join(application_root, '.eslintrc.json'), { clobber: false }),
       fs.copyAsync(path.join(periodic_module_resources, 'typings.json'), path.join(application_root, 'typings.json'), { clobber: false }),
@@ -285,11 +284,11 @@ const init = function (current_directory) {
   periodic_module_resources = path.join(current_directory, 'node_modules/periodicjs');
   if (skip_app_post_install) {
     custom_clean_install = true;
-    install_extensions()
+    return install_extensions()
       .then(install_complete_callback)
       .catch(install_error_callback);
   } else {
-    create_log_directory()
+    return create_log_directory()
       .then(() => {
         return create_project_files();
       })

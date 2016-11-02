@@ -235,18 +235,32 @@ program
       prefix: install_prefix
     };
     console.log('Starting PeriodicJS install'.green.underline);
-    
-    npm.load(npm_load_options, (err) => {
-      if (err) return err;
-      npm.commands.install(['periodicjs'], (err) => {
-        if (err) return err
-        console.log(install_prefix);
+    app_pre_install.init(install_prefix)
+      .then(() => {
+        return new Promise((resolve, reject) => {
+          npm.load(npm_load_options, (err) => {
+            if (err) return err;
+            npm.commands.install(['periodicjs'], (err) => {
+              if (err) return err
+              console.log('Installed periodicjs'.green.underline)
+              resolve();
+            })
+          })
+        })
+      })
+      .then(() => {
+        return app_post_install.init(install_prefix);
+      })
+      .then(() => {
         fs.remove(install_prefix + '/node_modules/periodicjs', (err) => {
           if (err) return console.log('Error removing periodicjs from node_modules');
+          console.log(`Installation complete`.green.underline);
+          return Promise.resolve();
         });
-        console.log('Installed periodicjs'.green.underline)
       })
-    })
+      .catch(err => {
+        console.log(`Error installing PeriodicJS ${err}`);
+      })
   });
 
 program

@@ -24,7 +24,7 @@ var npm_init_polyfill_promise = new Promise((resolve,reject)=>{
 });
 
 const init = function () {
-	npm_init_polyfill_promise.then(null,(/*error*/)=>{
+	return npm_init_polyfill_promise.then(null,(/*error*/)=>{
 		//folder doesn't exist
 		return new Promise((resolve,reject)=>{
 			fs.mkdir(node_modules_dir_path,(err)=>{
@@ -54,7 +54,8 @@ const init = function () {
 			console.log('Completed PRE-INSTALL');
 		},(/*error*/)=>{
 		//package.json doesn't exist
-		fs.write(package_json_file_path,'{}',(err)=>{
+			console.log(`Package.JSON doesn't exist ${package_json_file_path}`);
+		fs.writeFile(package_json_file_path, '{}', 'utf8', (err) => {
 				if(err){
 						console.log('Could not PRE-INSTALL Periodic while creating package.json',err.stack);
 					}
