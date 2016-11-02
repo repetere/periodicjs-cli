@@ -33,7 +33,5 @@
     "semver": "^5.3.0",
     "utils-merge": "^1.0.0"
   },
-  "private": true,
-  "readme": "My Custom PeriodicJS / Express Applcation",
-  "repository": "npm/npm"
+  "readme": "Periodicjs CLI"
 }
