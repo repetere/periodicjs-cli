@@ -12,6 +12,8 @@ const async = require('async');
 const nodemon = require('nodemon');
 const npm = require('npm');
 const npm_deploysync = require('./scripts/npm_deploymentsync');
+const app_pre_install = require('./scripts/app_pre_install');
+const app_post_install = require('./scripts/app_post_install');
 const colors = require('colors');
 const spawn = require('child_process').spawn;
 let install_prefix = process.cwd();
@@ -61,7 +63,7 @@ program
     } else {
       try {
         console.log('deploying for %s env(s)', env);
-        run_cmd( 'pm2', ['deploy', path.resolve(process.cwd(),'content/config/deployment/ecosystem.json')], function(err,text) { console.log (text); }, env);
+        run_cmd( 'pm2', ['deploy', path.resolve(process.cwd(),'content/config/deployment/ecosystem.json')], function (err, text) { console.log(text.green.underline) });
       }
       catch (e) {
         logger.error(e);
@@ -77,22 +79,47 @@ program
   .alias('ds')
   .description('')
   .action(function () {
-    console.log('Running deploysync'.america.underline);
+    console.log('Running deploysync'.green.underline);
     npm_deploysync.deploy_sync_promise()
       .then(result => {
         console.log(`Successfully ran deploysync`.green.underline);
       })
       .catch(err => { 
-        console.log(`Error running deploysync: ${err}`.red);
+        console.log(`Error running deploysync: ${err}`.red.underline);
       });
+  });
+
+program
+  .command('forever')
+  .alias('f')
+  .description('')
+  .action((env = 'development') => {
+    run_cmd('forever', ['start', '-o', 'logs/app-out.forever.log', '-e', 'logs/app-err.forever.log', '-c', 'nodemon', 'index.js', '--e', env], function (err, text) { console.log(text.green.underline) });
+  });
+
+program
+  .command('coverage')
+  .alias('c')
+  .description('')
+  .action(() => {
+    run_cmd('mocha', ['-R', 'html-cov', '--recursive > test/coverage.html'], function (err, text) { console.log(text.green.underline) });
   });
 
 program
   .command('start [env]')
   .description('starts the application in the specified environment')
-  .action(function (env) {
-    console.log(`Starting application in ${env}`.america.underline);
-    run_cmd('nodemon', ['index.js', '--e', env], function (err, text) { console.log(text).rainbow.underline }, env);
+  .action((env = 'development') => {
+    let message = 'Starting application';
+    if (env) message = `Starting application in ${env}`;
+    console.log(message.green.underline);
+    run_cmd('nodemon', ['index.js', '--e', env], function (err, text) { console.log(text.green.underline) });
+  });
+
+program
+  .command('stop')
+  .description('Stops the forever instance of the application')
+  .action(() => {
+    run_cmd('forever', ['stop', '-c', 'nodemon', 'index.js'], function (err, text) { console.log(text.green.underline) });
   });
 
 program
@@ -100,7 +127,7 @@ program
   .description('Recursively runs mocha tests')
   .action(function () {
     console.log('Running tests'.green.underline);
-    run_cmd('mocha', ['-R', 'spec', '--recursive'], function (err, text) { console.log(text.rainbow.underline) } );
+    run_cmd('mocha', ['-R', 'spec', '--recursive'], function (err, text) { console.log(text.green.underline) });
   });
 
 function installExtension(extension) {
@@ -114,21 +141,21 @@ function installExtension(extension) {
 
   if (extension.indexOf('@') !== -1) {
     let [name, version] = extension.split('@');
-    console.log(`Installing ${name}@${version}`.rainbow.underline);
+    console.log(`Installing ${name}@${version}`.green.underline);
     npm.load(npm_load_options, function (err) {
-      if (err) return console.log(`Error installing extension ${name}`.red);
+      if (err) return console.log(`Error installing extension ${name}`.red.underline);
       npm.commands.install([`periodicjs.ext.${name}@${version}`], function (err, data) {
-        if (err) return console.log(`Error installing extension ${name}`.red)
-        console.log(`Successfully installed extension ${name}@${version}`.america);
+        if (err) return console.log(`Error installing extension ${name}`.red.underline)
+        console.log(`Successfully installed extension ${name}@${version}`.green.underline);
       })
     })
   } else {
-    console.log(`Installing ${extension}@latest`.rainbow.underline);
+    console.log(`Installing ${extension}@latest`.green.underline);
     npm.load(npm_load_options, function (err) {
-      if (err) return console.log(`Error installing extension ${name}`.red);
+      if (err) return console.log(`Error installing extension ${name}`.red.underline);
       npm.commands.install([`periodicjs.ext.${extension}`], function (err, data) {
-        if (err) return console.log(`Error installing extension ${extension}`.red)
-        console.log(`Successfully installed extension ${extension}@$latest`.america);
+        if (err) return console.log(`Error installing extension ${extension}`.red.underline)
+        console.log(`Successfully installed extension ${extension}@$latest`.green.underline);
       })
     })    
   }
@@ -142,12 +169,12 @@ function removeExtension(extension) {
     'production': true,
     prefix: install_prefix
   };
-  console.log(`Removing extension ${extension}`.rainbow);
+  console.log(`Removing extension ${extension}`.green.underline);
   npm.load(npm_load_options, function (err) {
-    if (err) return console.log(`Error removing extension ${err}`.red);
+    if (err) return console.log(`Error removing extension ${err}`.red.underline);
     npm.commands.remove([`periodicjs.ext.${extension}`], function (err, data) {
-      if (err) return console.log(`Error removing extension ${err}`.red)
-      console.log(`Successfully removed extension ${extension}`.america);
+      if (err) return console.log(`Error removing extension ${err}`.red.underline)
+      console.log(`Successfully removed extension ${extension}`.green.underline);
     })
   })
 };
@@ -182,7 +209,7 @@ program
       'production': true,
       prefix: install_prefix
     };
-    console.log(`Starting PeriodicJS@${version} install`.rainbow.underline);
+    console.log(`Starting PeriodicJS@${version} install`.green.underline);
     npm.load(npm_load_options, (err) => {
       if (err) return err;
       npm.commands.install([`periodicjs@${version}`], (err) => {
@@ -190,7 +217,7 @@ program
         fs.remove(install_prefix + '/node_modules/periodicjs', (err) => {
           if (err) return console.log('Error removing periodicjs from node_modules');
         });
-        console.log(`Installed periodicjs@${version}`.america.underline)
+        console.log(`Installed periodicjs@${version}`.green.underline)
       })
     })
   });
@@ -207,7 +234,8 @@ program
       'production': true,
       prefix: install_prefix
     };
-    console.log('Starting PeriodicJS install'.rainbow.underline);
+    console.log('Starting PeriodicJS install'.green.underline);
+    
     npm.load(npm_load_options, (err) => {
       if (err) return err;
       npm.commands.install(['periodicjs'], (err) => {
@@ -216,9 +244,25 @@ program
         fs.remove(install_prefix + '/node_modules/periodicjs', (err) => {
           if (err) return console.log('Error removing periodicjs from node_modules');
         });
-        console.log('Installed periodicjs'.america.underline)
+        console.log('Installed periodicjs'.green.underline)
       })
     })
   });
+
+program
+  .command('pre-install')
+  .alias('preinstall')
+  .description('Runs periodicjs preinstall script')
+  .action(function () {
+    app_pre_install.init(install_prefix);
+  });
+
+program
+  .command('post-install')
+  .alias('postinstall')
+  .description('Runs periodicjs postinstall script')
+  .action(function () {
+    app_post_install.init(install_prefix);
+  });  
 
 program.parse(process.argv);

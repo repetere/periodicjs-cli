@@ -23,9 +23,6 @@ var install_errors = [];
 var already_installed = false;
 var custom_clean_install = false;
 
-// console.log('__dirname',__dirname);
-// console.log('process.cwd()',process.cwd());
-// console.log('application_root',application_root);
 
 /**
  * create log directory
@@ -200,13 +197,13 @@ let project_files_copy = function() {
     console.log('****************************');
     console.log('*** COPYING PERIODIC DIR ***');
     console.log('****************************');
-    // console.log('------------------------');
-    // console.log('---project_files_copy---')
-    // console.log('------------------------');
-    // console.log('project_index_path',project_index_path);
-    // console.log('application_root_path',application_root_path);
-    // console.log('periodic_module_resources',periodic_module_resources);
-    // console.log('application_root',application_root);
+    console.log('------------------------');
+    console.log('---project_files_copy---')
+    console.log('------------------------');
+    console.log('project_index_path',project_index_path);
+    console.log('application_root_path',application_root_path);
+    console.log('periodic_module_resources',periodic_module_resources);
+    console.log('application_root',application_root);
     return Promise.all([
       fs.copyAsync(project_index_path, application_root_path, { clobber: true }), //index.js
       fs.copyAsync(path.join(periodic_module_resources, 'scripts'), path.join(application_root, 'scripts'), { clobber: true }),
@@ -282,26 +279,32 @@ let install_error_callback = function(e) {
   process.exit(0);
 };
 
-//install the new periodic
-if (skip_app_post_install) {
-  custom_clean_install = true;
-  install_extensions()
-    .then(install_complete_callback)
-    .catch(install_error_callback);
-} else {
-  create_log_directory()
-    .then(() => {
-      return create_project_files();
-    })
-    .then(() => {
-      return project_package_json();
-    })
-    .then(() => {
-      return project_files_copy();
-    })
-    .then(() => {
-      return install_extensions();
-    })
-    .then(install_complete_callback)
-    .catch(install_error_callback);
-}
+const init = function (current_directory) {
+  //install the new periodic
+  application_root = current_directory;
+  periodic_module_resources = path.join(current_directory, 'node_modules/periodicjs');
+  if (skip_app_post_install) {
+    custom_clean_install = true;
+    install_extensions()
+      .then(install_complete_callback)
+      .catch(install_error_callback);
+  } else {
+    create_log_directory()
+      .then(() => {
+        return create_project_files();
+      })
+      .then(() => {
+        return project_package_json();
+      })
+      .then(() => {
+        return project_files_copy();
+      })
+      .then(() => {
+        return install_extensions();
+      })
+      .then(install_complete_callback)
+      .catch(install_error_callback);
+  }
+};
+
+module.exports = { init };
