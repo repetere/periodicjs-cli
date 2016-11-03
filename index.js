@@ -209,6 +209,7 @@ program
       'production': true,
       prefix: install_prefix
     };
+    if (!version) version = 'latest'
     console.log(`Starting PeriodicJS@${version} install`.green.underline);
     npm.load(npm_load_options, (err) => {
       if (err) return err;
