@@ -15,6 +15,7 @@ const deploy_sync = require('./npm_deploymentsync');
 const async = require('async');
 const Utilities = require('periodicjs.core.utilities');
 const CoreUtilities = new Utilities({});
+const colors = require('colors');
 const skip_app_post_install = ((typeof process.env.npm_config_skip_app_post_install !== 'undefined' && process.env.npm_config_skip_app_post_install) || (typeof process.env.npm_config_skip_post_install !== 'undefined' && process.env.npm_config_skip_post_install)) ? true : false;
 var periodic_module_resources = path.join(__dirname, '../');
 var installation_resources = path.join(__dirname, 'install_resources');
@@ -35,12 +36,12 @@ let create_log_directory = function() {
       already_installed = true;
       // application_root_log_dir = process.cwd();
     } else {
-      let installed_node_periodic_package_json = fs.readJsonSync(path.join(path.resolve(process.cwd(), '../../'), 'package.json'), { thows: false });
+      let installed_node_periodic_package_json = fs.readJsonSync(path.join(path.resolve(process.cwd(), '../../'), 'package.json'), { throws: false });
       if (installed_node_periodic_package_json && installed_node_periodic_package_json.name !== 'periodicjs') {
         already_installed = true;
       }
     }
-
+  
   } catch (e) {
 
   }
@@ -180,7 +181,6 @@ let project_files_copy = function() {
 
   try {
     application_package_file_data = fs.readJsonSync(application_package_file_path, { throws: false });
-    console.log('project_files_copy application_package_file_data', application_package_file_data)
   } catch (e) {
     let errorRegExp = /no such file or directory/gi;
     if (!e.message.match(errorRegExp)) {
@@ -197,13 +197,13 @@ let project_files_copy = function() {
     console.log('****************************');
     console.log('*** COPYING PERIODIC DIR ***');
     console.log('****************************');
-    console.log('------------------------');
-    console.log('---project_files_copy---')
-    console.log('------------------------');
-    console.log('project_index_path',project_index_path);
-    console.log('application_root_path',application_root_path);
-    console.log('periodic_module_resources',periodic_module_resources);
-    console.log('application_root',application_root);
+    // console.log('------------------------');
+    // console.log('---project_files_copy---')
+    // console.log('------------------------');
+    // console.log('project_index_path',project_index_path);
+    // console.log('application_root_path',application_root_path);
+    // console.log('periodic_module_resources',periodic_module_resources);
+    // console.log('application_root',application_root);
     return Promise.all([
       fs.copyAsync(project_index_path, application_root_path, { clobber: true }), //index.js
       fs.copyAsync(path.join(periodic_module_resources, 'nodemon.json'), path.join(application_root, 'nodemon.json'), { clobber: true }),
@@ -223,7 +223,7 @@ let project_files_copy = function() {
  * test if periodic is already installed, if so run deploysync, otherwise install standard extensions
  * @return {[type]} [description]
  */
-let install_extensions = function() {
+let install_extensions = function () {
   let application_extensions = false;
   let application_extensions_path = path.join(application_root, 'content/config/extensions.json');
   let app_root_to_use;
@@ -251,7 +251,7 @@ let install_extensions = function() {
     }
   }
 
-  if (application_extensions && already_installed) {
+  if (application_extensions.extensions.length > 1 && already_installed) {
     console.log('Periodic Already Installed, Upgrading', 'app_root_to_use', app_root_to_use);
     return deploy_sync.deploy_sync_promise({ application_root: app_root_to_use });
   } else {
@@ -265,7 +265,7 @@ let install_complete_callback = function(result) {
     console.log('post install deploysync result', result);
     CoreUtilities.restart_app({});
   }
-  console.log('Installed Periodic');
+  console.log('Installed Periodic'.green);
   if (install_errors.length > 0) {
     console.log('Install Warnings', install_errors);
   }

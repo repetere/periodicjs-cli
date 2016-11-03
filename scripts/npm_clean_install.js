@@ -11,13 +11,14 @@ const standardExtensions = require('./standard_extensions');
 const npm = require('npm');
 const fs = require('fs-extra');
 const path = require('path');
+const colors = require('colors');
 const promisie = require('promisie');
 /**
  * This is the directory path within your project where periodic is installed into node_modules. 
  * When installing from scratch, process.cwd() refers to the original location of periodic within node modules
  * @type {[type]}
  */
-var prefixpath = path.resolve(process.cwd(),'../../');//path.resolve(process.cwd());
+var prefixpath = path.resolve(process.cwd());
 
 
 var installStandardExtensions = function(options,callback){

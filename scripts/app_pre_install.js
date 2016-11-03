@@ -8,6 +8,7 @@
 
 const fs =  require('fs');
 const path = require('path');
+const colors = require('colors');
 const node_modules_dir_path = path.join(process.cwd(),'node_modules');
 const package_json_file_path = path.join(process.cwd(),'package.json');
 
@@ -51,21 +52,20 @@ const init = function () {
 		});
 	})
 	.then((/*package_json_data*/)=>{
-			console.log('Completed PRE-INSTALL');
+			console.log('Completed Preinstall'.green);
 		},(/*error*/)=>{
 		//package.json doesn't exist
-			console.log(`Package.JSON doesn't exist ${package_json_file_path}`);
 		fs.writeFile(package_json_file_path, '{}', 'utf8', (err) => {
 				if(err){
-						console.log('Could not PRE-INSTALL Periodic while creating package.json',err.stack);
+						console.log('Could not Preinstall Periodic while creating package.json',err.stack);
 					}
 				else{
-					console.log('Completed PRE-INSTALL');
+					console.log('Completed Preinstall'.green);
 				}
 			});
 	})
 	.catch((e)=>{
-		console.log('Could not PRE-INSTALL Periodic',e.stack);
+		console.log('Could not Preinstall Periodic',e.stack);
 	});
 }
 
