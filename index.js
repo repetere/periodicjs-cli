@@ -213,12 +213,21 @@ program
     console.log(`Starting PeriodicJS@${version} install`.green.underline);
     npm.load(npm_load_options, (err) => {
       if (err) return err;
-      npm.commands.install([`periodicjs@${version}`], (err) => {
+      npm.commands.install([`git+ssh://git@github.com:typesettin/periodicjs.git`], (err) => {
         if (err) return err
-        fs.remove(install_prefix + '/node_modules/periodicjs', (err) => {
-          if (err) return console.log('Error removing periodicjs from node_modules');
-        });
-        console.log(`Installed periodicjs@${version}`.green.underline)
+        app_post_install.init(install_prefix)
+          .then(() => {
+            fs.remove(install_prefix + '/node_modules/periodicjs', (err) => {
+              if (err) return console.log('Error removing periodicjs from node_modules');
+              return Promise.resolve();
+            });          
+          })
+          .then(() => {
+            console.log(`Installed periodicjs@${version}`.green.underline);
+          })
+          .catch(err => {
+            console.log(`Error installing PeriodicJS ${err}`);
+          })
       })
     })
   });
