@@ -213,7 +213,7 @@ program
     console.log(`Starting PeriodicJS@${version} install`.green.underline);
     npm.load(npm_load_options, (err) => {
       if (err) return err;
-      npm.commands.install([`git+ssh://git@github.com:typesettin/periodicjs.git`], (err) => {
+      npm.commands.install([`periodicjs`], (err) => {
         if (err) return err
         app_post_install.init(install_prefix)
           .then(() => {
