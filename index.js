@@ -27,7 +27,7 @@ var run_cmd = function (cmd, args, callback, env) {
   var spawn = require('child_process').spawn;
 
   if (env) {
-    child = spawn(cmd, args, env);		
+    child = spawn(cmd, args, env);
   }
   else {
     child = spawn(cmd, args);		
@@ -63,7 +63,7 @@ program
     } else {
       try {
         console.log('deploying for %s env(s)', env);
-        run_cmd( 'pm2', ['deploy', path.resolve(process.cwd(),'content/config/deployment/ecosystem.json')], function (err, text) { console.log(text.green.underline) });
+        run_cmd('pm2', ['deploy', path.resolve(process.cwd(),'content/config/deployment/ecosystem.json'), env], function (err, text) { console.log(text.green.underline) });
       }
       catch (e) {
         logger.error(e);
@@ -72,6 +72,25 @@ program
       }      
     }
   });
+
+program
+  .command('deploysetup')
+  .description('run deploy setup for specified environment')
+  .action(function (env) {
+    if (!env) {
+      console.log('Please speicify the environment')
+    } else {
+      try {
+        console.log('running deploy setup for %s env(s)', env);
+        run_cmd('pm2', ['deploy', path.resolve(process.cwd(),'content/config/deployment/ecosystem.json'), env, 'setup'], function (err, text) { console.log(text.green.underline) });
+      }
+      catch (e) {
+        logger.error(e);
+        logger.error(e.stack);
+        process.exit(0);
+      }
+    }
+  })
 
 program
   .command('deploy-sync')
